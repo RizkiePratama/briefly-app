@@ -1,90 +1,153 @@
 import 'package:flutter/material.dart';
 import 'package:gnews/gnews.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:briefly_app/briefly_webview.dart';
+import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
 
 class GNewsAdaptor {
-  GNewsAdaptor({required this.context });
   var service = GNewsScrap();
   BuildContext context;
+  List<Map<String,dynamic>?> _headlines = [];
 
-  Future<List<Widget>> getHeadlines() async {
-    var headlines = await service.getHeadlines();
+  GNewsAdaptor({required this.context });
+  
+  Future<List<Widget>> getHeadlines([int? limit]) async {
+    _headlines = await service.getHeadlines();
+
+    if(limit == null) {
+      limit = _headlines.length;
+    }
+
     List<Widget> cards = [];
-
-    await Future.forEach(headlines.getRange(0, 5).toList(), (headline) async {
+    await Future.forEach(_headlines.getRange(0, limit).toList(), (headline) async {
       if (headline != null) {
         Widget title = Text(
           headline['title'],
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.bold,
           ),
         );
-        var post_date = DateTime.parse(headline['publish_at']);
-        var date_formater = DateFormat('dd MMMM yyyy');
-        Widget published_at = Text('Posted at ' + date_formater.format(post_date));
+        var postDate = DateTime.parse(headline['publish_at']);
+        var dateFormater = DateFormat('dd MMMM yyyy');
+        Widget publishedAt = Text('Posted at ${dateFormater.format(postDate)}');
 
-        Widget thumbnail_image;
+        Widget thumbnailImage;
         if(headline.containsKey('thumbnail_url') && headline['thumbnail_url'] != null) {
-          thumbnail_image = Image(
+          thumbnailImage = Image(
               width: 150,
               image: NetworkImage(headline['thumbnail_url'])
           );
         } else {
-          thumbnail_image = SizedBox(width: 10);
+          thumbnailImage = const SizedBox(width: 10);
         }
-        var target_url = await _getRealURL(headline['article_path']);
-        print(target_url);
-        Widget card = Expanded(
-            child: GestureDetector(
-                onTap: () {
-                  //_launchUrl(headline['article_path']);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => BrieflyAppWebView(url: target_url)
-                      )
-                  );
-                },
-                child:Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(width: 10),
-                    thumbnail_image,
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Wrap(
-                        runSpacing: 10,
-                        children: [
-                          title,
-                          published_at
-                        ],
-                      )
-                    ),
-                  ],
-                )
+
+        var targetURL = await _getRealURL(headline['article_path']);
+        Widget card =  GestureDetector(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => BrieflyAppWebView(url: targetURL)
+                  )
+              );
+            },
+            child:Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 10),
+                thumbnailImage,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Wrap(
+                    runSpacing: 10,
+                    children: [
+                      title,
+                      publishedAt
+                    ],
+                  )
+                ),
+              ],
             )
         );
         cards.add(card);
+        cards.add(const SizedBox(height: 10));
       };
     });
 
     return cards;
   }
 
-  Future<void> _launchUrl(String target) async {
-    var target_post_uri = await _getRealURL(target);
+  Future<List<Widget>> getHeadlinesCarousel([int? limit]) async {
+    var carousels =  <Widget>[];
 
-    if (!await launchUrl(Uri.parse(target_post_uri))) {
-      throw Exception('Could not launch $target');
+    if(limit == null) {
+      limit = 5;
     }
+
+    await Future.forEach(_headlines.getRange(0, limit).toList(), (headline) async {
+      carousels.add(
+        Container(
+            width: MediaQuery.of(context).size.width,
+            margin: const EdgeInsets.symmetric(horizontal: 3.0),
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                    image: DecorationImage(image: NetworkImage(headline?['thumbnail_url']), fit: BoxFit.cover,),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                  child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(headline?['title'], style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white)),
+                      )
+                  )
+                )
+              ]
+            )
+        )
+      );
+    });
+
+    return [
+        const SizedBox(height: 20),
+        FlutterCarousel(
+          options: CarouselOptions(
+            height: 200.0,
+            showIndicator: false,
+          ),
+          items: carousels.map((carousel) {
+            return Builder(
+              builder: (BuildContext context) {
+                return carousel;
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 10),
+    ];
   }
 
-  Future<String> _getRealURL(String target) async {
-    var target_post = await service.getNewsPost(target);
-    return target_post?['url'];
+  Future<String> _getRealURL(String path) async {
+    var service = GNewsScrap();
+    var targetPost = await service.getNewsPost(path);
+    print(targetPost);
+    return targetPost?['url'];
   }
 }

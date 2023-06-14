@@ -37,7 +37,7 @@ dependencies:
      ref: main
   intl: ^0.18.1
   webview_flutter: ^4.2.2
-  url_launcher: ^6.1.11
+  flutter_carousel_widget: ^2.0.4
 
 dev_dependencies:
   flutter_test:

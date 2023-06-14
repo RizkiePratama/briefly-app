@@ -27,36 +27,52 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  void _incrementCounter() {
-    setState(() {
-    });
-  }
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   Widget build(BuildContext context) {
-    var adaptor = GNewsAdaptor(context: context);
+
     return FutureBuilder<List<Widget>>(
-        future: adaptor.getHeadlines(),
+        future: composeHomePageWidgets(),
         builder: (context, AsyncSnapshot<List<Widget>?> snapshot) {
-          List<Widget> body_widget = [];
+          var bodyWidget = <Widget>[];
+
           if (snapshot.data != null) {
-            body_widget = snapshot.data!;
+            bodyWidget = bodyWidget + snapshot.data!;
           } else {
-            body_widget = <Widget>[CircularProgressIndicator()];
+            bodyWidget.add(const CircularProgressIndicator());
           }
 
           return Scaffold(
             appBar: AppBar(
               title: Text(widget.title),
             ),
-            body: Center(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: body_widget
-              ),
+            body: RefreshIndicator(
+              key: _refreshIndicatorKey,
+              color: Colors.white,
+              backgroundColor: Colors.blue,
+              strokeWidth: 4.0,
+              onRefresh: () async {
+              },
+              child: Expanded(
+                child: ListView.builder(
+                  itemCount: bodyWidget.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return bodyWidget[index];
+                  }
+                )
+              )
             ),
           );
         }
     );
+  }
+
+  Future<List<Widget>> composeHomePageWidgets() async {
+    var adaptor = GNewsAdaptor(context: context);
+    var headlines = await adaptor.getHeadlines(10);
+    var carousel = await adaptor.getHeadlinesCarousel(5);
+
+    return carousel + headlines;
   }
 }
