@@ -8,6 +8,7 @@ class GNewsAdaptor {
   var service = GNewsScrap();
   BuildContext context;
   List<Map<String, dynamic>?> _headlines = [];
+  static const carouselItemSize = 5;
 
   GNewsAdaptor({required this.context});
 
@@ -17,7 +18,7 @@ class GNewsAdaptor {
     limit ??= _headlines.length;
 
     List<Widget> cards = [];
-    await Future.forEach(_headlines.getRange(0, limit).toList(), (headline) async {
+    await Future.forEach(_headlines.getRange(carouselItemSize, limit).toList(), (headline) async {
       if (headline != null) {
         Widget title = Text(
           headline['title'],
@@ -67,41 +68,57 @@ class GNewsAdaptor {
   Future<List<Widget>> getHeadlinesCarousel([int? limit]) async {
     var carousels = <Widget>[];
 
-    limit ??= 5;
+    limit ??= carouselItemSize;
 
     await Future.forEach(_headlines.getRange(0, limit).toList(), (headline) async {
-      carousels.add(Container(
-          width: MediaQuery.of(context).size.width,
-          margin: const EdgeInsets.symmetric(horizontal: 3.0),
-          child: Stack(children: [
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(5)),
-                image: DecorationImage(
-                  image: NetworkImage(headline?['thumbnail_url']),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(5)),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.8),
-                    ],
+      carousels.add(
+        InkWell(
+          onTap: () async {
+            var targetURL = await _getRealURL(headline?['article_path']);
+            Navigator.push(context, MaterialPageRoute(builder: (context) => BrieflyAppWebView(url: targetURL)));
+          },
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            margin: const EdgeInsets.symmetric(horizontal: 3.0),
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                    image: DecorationImage(
+                      image: NetworkImage(headline?['thumbnail_url']),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                child: Align(
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                  child: Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
-                      child: Text(headline?['title'], style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white)),
-                    )))
-          ])));
+                      child: Text(
+                        headline?['title'],
+                        style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     });
 
     return [
