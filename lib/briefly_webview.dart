@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-
 class BrieflyAppWebView extends StatefulWidget {
-  const BrieflyAppWebView({super.key, required this.url});
+  const BrieflyAppWebView({Key? key, required this.url}) : super(key: key);
 
   final String url;
 
@@ -26,13 +25,9 @@ class _BrieflyAppWebViewState extends State<BrieflyAppWebView> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Widget>>(
-        builder: (context, AsyncSnapshot<List<Widget>?> snapshot) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: WebViewWidget(controller: _controller)
-          );
-        }
+    return Scaffold(
+      appBar: AppBar(),
+      body: WebViewWidget(controller: _controller),
     );
   }
 }

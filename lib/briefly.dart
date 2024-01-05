@@ -31,40 +31,53 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return FutureBuilder<List<Widget>>(
-        future: composeHomePageWidgets(),
-        builder: (context, AsyncSnapshot<List<Widget>?> snapshot) {
-          var bodyWidget = <Widget>[];
+      future: composeHomePageWidgets(),
+      builder: (context, AsyncSnapshot<List<Widget>?> snapshot) {
+        var bodyWidget = <Widget>[];
 
-          if (snapshot.data != null) {
-            bodyWidget = bodyWidget + snapshot.data!;
-          } else {
-            bodyWidget.add(const CircularProgressIndicator());
-          }
-
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
               title: Text(widget.title),
             ),
-            body: RefreshIndicator(
-              key: _refreshIndicatorKey,
-              color: Colors.white,
-              backgroundColor: Colors.blue,
-              strokeWidth: 4.0,
-              onRefresh: () async {
-              },
-              child: Expanded(
-                child: ListView.builder(
-                  itemCount: bodyWidget.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return bodyWidget[index];
-                  }
-                )
-              )
+            body: Center(
+              child: CircularProgressIndicator(),
             ),
           );
+        } else if (snapshot.hasError) {
+          // Handle error state if needed
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(widget.title),
+            ),
+            body: Center(
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          );
+        } else if (snapshot.data != null) {
+          bodyWidget = bodyWidget + snapshot.data!;
         }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+          ),
+          body: RefreshIndicator(
+            key: _refreshIndicatorKey,
+            color: Colors.white,
+            backgroundColor: Colors.blue,
+            strokeWidth: 4.0,
+            onRefresh: () async {},
+            child: ListView.builder(
+              itemCount: bodyWidget.length,
+              itemBuilder: (BuildContext context, int index) {
+                return bodyWidget[index];
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
