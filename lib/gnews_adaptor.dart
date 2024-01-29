@@ -18,7 +18,7 @@ class GNewsAdaptor {
     limit ??= _headlines.length;
 
     List<Widget> cards = [];
-    await Future.forEach(_headlines.getRange(carouselItemSize, limit).toList(), (headline) async {
+    await Future.forEach(_headlines.getRange(carouselItemSize, (limit + carouselItemSize)).toList(), (headline) async {
       if (headline != null) {
         Widget title = Text(
           headline['title'],
