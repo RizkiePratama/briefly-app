@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:briefly_app/gnews_adaptor.dart';
+import 'package:briefly/gnews_adaptor.dart';
 
 class BrieflyApp extends StatelessWidget {
   const BrieflyApp({super.key});

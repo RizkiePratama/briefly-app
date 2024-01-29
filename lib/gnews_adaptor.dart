@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gnews/gnews.dart';
 import 'package:intl/intl.dart';
-import 'package:briefly_app/briefly_webview.dart';
+import 'package:briefly/briefly_webview.dart';
 import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
 
 class GNewsAdaptor {
