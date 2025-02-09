@@ -124,7 +124,7 @@ class GNewsAdaptor {
     return [
       const SizedBox(height: 20),
       FlutterCarousel(
-        options: CarouselOptions(
+        options: FlutterCarouselOptions (
           height: 200.0,
           showIndicator: false,
         ),
@@ -143,6 +143,6 @@ class GNewsAdaptor {
   Future<String> _getRealURL(String path) async {
     var service = GNewsScrap();
     var targetPost = await service.getNewsPost(path);
-    return targetPost?['url'];
+    return targetPost['url'];
   }
 }
